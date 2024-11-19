@@ -1,4 +1,5 @@
 import sys
+import os
 from process import Process
 
 def validate_processes_file(file_name):
@@ -74,3 +75,6 @@ def load_processes(file_name):
     processes.sort(key=lambda process: process.arrival_time)
 
     return processes
+
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
