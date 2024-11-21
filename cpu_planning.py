@@ -23,7 +23,7 @@ def assign_to_waiting_processes(waiting_list, ready_queue, partitions, current_t
 def execute_process(current_process, quantum_counter, quantum, cpu_queue, current_time):
     if current_process:
         # Imprimir el estado del proceso en la CPU y el quantum
-        print(f"Proceso {current_process.process_id} está ejecutándose en la CPU.")
+        print(f"Proceso {current_process.process_id} está corriendo en la CPU.")
         print(f"Quantum usado: {quantum_counter + 1}/{quantum}")
 
         # Reducir el tiempo restante del proceso y actualizar el quantum
@@ -93,7 +93,6 @@ def simulate(file_name):
             current_process = ready_queue.popleft()
             if current_process.start_time is None:
                 current_process.start_time = current_time
-            print(f"\nProceso {current_process.process_id} está corriendo en la CPU.")
 
         if current_process:
             current_process, quantum_counter, finished = execute_process(
@@ -107,7 +106,7 @@ def simulate(file_name):
 
             # Si el quantum se agota, mover el proceso al final de la cola
             elif quantum_counter == quantum:
-                print(f"Proceso {current_process.process_id} ha agotado su quantum y será reubicado.")
+                print(f"Proceso {current_process.process_id} ha agotado su tiempo en CPU.")
                 ready_queue.append(current_process)
                 current_process = None
                 quantum_counter = 0
