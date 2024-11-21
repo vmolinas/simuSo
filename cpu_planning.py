@@ -8,26 +8,37 @@ def assign_to_waiting_processes(waiting_list, ready_queue, partitions, current_t
     for process in list(waiting_list):
         # Verificar el límite de procesos en ready_queue
         if len(ready_queue) >= max_ready_queue_size:
-            print(f"Tiempo {current_time}: Límite alcanzado. Proceso {process.process_id} permanece en lista de espera.")
+            print(f"Límite alcanzado. Proceso {process.process_id} permanece en lista de espera.")
             break
 
-        # Intentar asignar memoria
+        # Intentar asignar memoria al proceso actual
         partition = worst_fit(partitions, process)
         if partition:
+            # Asignar el proceso a la partición
             partition.process_id = process.process_id
             partition.internal_fragmentation = partition.size - process.size
             process.assigned_partition = partition
             waiting_list.remove(process)
             ready_queue.append(process)
-            # print(f"Proceso {process.process_id} asignado a memoria.")
+            print(f"Proceso {process.process_id} asignado a la Partición {partition.id_partition} con tamaño {partition.size}K.")
+        else:
+            # Si no cabe en memoria, mostrar mensaje pero no detener la ejecución de procesos en memoria
+            print(f"Proceso {process.process_id} no cabe en ninguna partición. Esperando memoria.")
+            return  # No continuar con el siguiente proceso; esperar memoria
 
 def execute_process(current_process, quantum_counter, quantum, cpu_queue, current_time):
     if current_process:
+        # Imprimir el estado del proceso en la CPU y el quantum
+        print(f"Proceso {current_process.process_id} está ejecutándose en la CPU.")
+        print(f"Quantum usado: {quantum_counter + 1}/{quantum}")
+
+        # Reducir el tiempo restante del proceso y actualizar el quantum
         current_process.remaining_time -= 1
         quantum_counter += 1
 
         # Verificar si el proceso ha terminado
         if current_process.remaining_time == 0:
+            print(f"Proceso {current_process.process_id} ha terminado su ejecución.")
             return current_process, 0, True
 
     return current_process, quantum_counter, False
@@ -47,7 +58,19 @@ def update_waiting_list(waiting_list, processes, current_time, max_waiting_size=
         if process.arrival_time <= current_time and len(waiting_list) < max_waiting_size:
             waiting_list.append(process)
             processes.remove(process)
-            # print(f"Proceso {process.process_id} añadido a la lista de espera.")
+
+def synchronize_ready_queue(ready_queue, partitions, current_process):
+    # Obtener IDs de los procesos asignados en las particiones
+    active_process_ids = {partition.process_id for partition in partitions if partition.process_id is not None}
+
+    # Filtrar procesos activos que no están duplicados
+    synchronized_queue = [proc for proc in ready_queue if proc.process_id in active_process_ids]
+
+    # Si hay un proceso en ejecución, colocarlo al frente y evitar duplicados
+    if current_process and current_process.process_id in active_process_ids:
+        synchronized_queue = [current_process] + [proc for proc in synchronized_queue if proc.process_id != current_process.process_id]
+    
+    return synchronized_queue
 
 def simulate(file_name):
     processes = load_processes(file_name)
@@ -60,7 +83,7 @@ def simulate(file_name):
     current_time = 0
 
     print("\n--- Inicio de la Simulación ---")
-
+    
     assign_to_waiting_processes(waiting_list, ready_queue, partitions, current_time)
 
     # Bucle principal de la simulación
@@ -72,34 +95,32 @@ def simulate(file_name):
         assign_to_waiting_processes(waiting_list, ready_queue, partitions, current_time)
 
         # Ejecutar el proceso actual
-        if current_process is None and ready_queue:
-            current_process = ready_queue.popleft()
-            if current_process.start_time is None:
-                current_process.start_time = current_time
-            print(f"\nProceso {current_process.process_id} está corriendo en la CPU.")
+        if current_process:
+            current_process, quantum_counter, finished = execute_process(
+            current_process, quantum_counter, quantum, ready_queue, current_time)
 
-        if current_process: current_process, quantum_counter, finished = execute_process(
-                            current_process, quantum_counter, quantum, ready_queue, current_time)
+            # Si el proceso terminó, liberar memoria y actualizar estado
+            if finished:
+                finalize_process(current_process, partitions, current_time)
+                current_process = None
+                quantum_counter = 0
 
-            # Si el proceso terminó, liberar memoria
-        if finished:
-            finalize_process(current_process, partitions, current_time)
-            current_process = None
-            quantum_counter = 0
+            # Si el quantum se agota, mover el proceso al final de la cola
+            elif quantum_counter == quantum:
+                print(f"Proceso {current_process.process_id} ha agotado su quantum y será reubicado.")
+                ready_queue.append(current_process)
+                current_process = None
+                quantum_counter = 0
 
-            # Si el quantum se agota, mover al final de la cola
-        elif quantum_counter == quantum:
-            ready_queue.append(current_process)
-            current_process = None
-            quantum_counter = 0
-
-        # Incrementar el tiempo
         current_time += 1
+        # Sincronizar la cola después de mover o finalizar procesos
+        ready_queue = deque(synchronize_ready_queue(list(ready_queue), partitions, current_process))
 
         # Verificar la condición de salida
         if all(process.finished for process in processes) and not ready_queue and not waiting_list and current_process is None:
             break
 
+        # Mostrar tablas
         display_memory_table(partitions)
         display_ready_queue(ready_queue)
         input("Presiona Enter para continuar...")

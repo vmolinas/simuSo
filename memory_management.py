@@ -15,7 +15,6 @@ def initialize_partitions():
 
     return partitions
 
-
 def worst_fit(partitions, process):
     worst_partition = None
     max_size = -1
@@ -41,5 +40,4 @@ def release_memory(partitions, process):
             print(f"Liberando la partición {partition.id_partition} ocupada por el Proceso {process.process_id}.")
             partition.process_id = None
             partition.internal_fragmentation = 0
-            # input("Presiona Enter para continuar... (releasememory)")
             break
