@@ -30,14 +30,14 @@ def worst_fit(partitions, process):
                 worst_partition = partition
 
     if worst_partition:
-        print(f"Proceso {process.process_id} asignado a la Partición {worst_partition.id_partition} con tamaño {worst_partition.size}K.")
+        print(f"  * Proceso {process.process_id} asignado a la Partición {worst_partition.id_partition} con tamaño {worst_partition.size}KB.")
 
     return worst_partition
 
 def release_memory(partitions, process):
     for partition in partitions:
         if partition.process_id == process.process_id:
-            print(f"Liberando la partición {partition.id_partition} ocupada por el Proceso {process.process_id}.")
+            print(f"\n  * Liberando la partición {partition.id_partition} ocupada por el Proceso {process.process_id}.")
             partition.process_id = None
             partition.internal_fragmentation = 0
             break

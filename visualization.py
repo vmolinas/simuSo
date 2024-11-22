@@ -1,5 +1,5 @@
 def display_memory_table(partitions):
-    print("\nTABLA DE PARTICIONES DE MEMORIA:")
+    print("\n  TABLA DE PARTICIONES DE MEMORIA:")
     print("+----------------+---------------+----------+--------------------+-----------------+")
     print("|  ID Partición  |  Dir. Inicio  |  Tamaño  |  Proceso Asignado  |  Fragmentación  |")
     print("+----------------+---------------+----------+--------------------+-----------------+")
@@ -22,12 +22,27 @@ def display_memory_table(partitions):
     print("+----------------+---------------+----------+--------------------+-----------------+")
 
 def display_ready_queue(ready_queue):
-    print("\nCOLA DE LISTOS:")
+    print("\n  COLA DE LISTOS:")
     print("+--------------+----------+-----------------+--------------------+-------------------+")
     print("|  Proceso ID  |  Tamaño  |  Tiempo Arribo  |  Tiempo Irrupción  |  Tiempo Restante  |")
     print("+--------------+----------+-----------------+--------------------+-------------------+")
 
     for process in ready_queue:
+        process_size = f"{process.size} KB"
+        print(f"| {str(process.process_id).ljust(12)} "
+              f"| {process_size.ljust(8)} "
+              f"| {str(process.arrival_time).ljust(15)} "
+              f"| {str(process.burst_time).ljust(18)} "
+              f"| {str(process.remaining_time).ljust(17)} |")
+    print("+--------------+----------+-----------------+--------------------+-------------------+")
+
+def display_waiting_queue(waiting_queue):
+    print("\n  COLA DE ESPERA:")
+    print("+--------------+----------+-----------------+--------------------+-------------------+")
+    print("|  Proceso ID  |  Tamaño  |  Tiempo Arribo  |  Tiempo Irrupción  |  Tiempo Restante  |")
+    print("+--------------+----------+-----------------+--------------------+-------------------+")
+
+    for process in waiting_queue:
         process_size = f"{process.size} KB"
         print(f"| {str(process.process_id).ljust(12)} "
               f"| {process_size.ljust(8)} "

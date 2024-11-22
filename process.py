@@ -1,3 +1,5 @@
+from memory_management import release_memory
+
 class Process:
     def __init__(self, process_id, size, arrival_time, burst_time):
         self.process_id = process_id
@@ -18,6 +20,34 @@ class Process:
                 f"Arribo = {self.arrival_time}, "
                 f"Irrupción = {self.burst_time}")
     
+def finalize_process(current_process, partitions, current_time):
+    current_process.finish_time = current_time + 1
+    current_process.turnaround_time = current_process.finish_time - current_process.arrival_time
+    current_process.waiting_time = current_process.turnaround_time - current_process.burst_time
+    current_process.finished = True
+    release_memory(partitions, current_process)
+
+    print(f"\t---Proceso {current_process.process_id}: "
+          f"  * Inicio={current_process.start_time}, Finalizado={current_process.finish_time}")
+
+def execute_process(current_process, quantum_counter, quantum, cpu_queue, current_time):
+    if current_process:
+        # Imprimir el estado del proceso en la CPU y el quantum
+        print(f"\n\t---PROCESADOR---")
+        print(f"  * Proceso {current_process.process_id} está corriendo en la CPU.")
+        print(f"  * Quantum usado: {quantum_counter + 1}/{quantum}")
+
+        # Reducir el tiempo restante del proceso y actualizar el quantum
+        current_process.remaining_time -= 1
+        quantum_counter += 1
+
+        # Verificar si el proceso ha terminado
+        if current_process.remaining_time == 0:
+            print(f"  * Proceso {current_process.process_id} ha terminado su ejecución.")
+            return current_process, 0, True
+
+    return current_process, quantum_counter, False
+
 def calculate_statistics(processes):
     total_turnaround_time = 0
     total_waiting_time = 0
@@ -39,7 +69,7 @@ def calculate_statistics(processes):
         avg_waiting_time = 0
         throughput = 0
 
-    print("\n--- Informe Estadístico ---")
-    print(f"Tiempo de retorno promedio: {avg_turnaround_time:.2f}")
-    print(f"Tiempo de espera promedio: {avg_waiting_time:.2f}")
-    print(f"Rendimiento del sistema: {throughput:.2f} trabajos por unidad de tiempo")
+    print("\n---INFORME ESTADISTICO---")
+    print(f"  * Tiempo de retorno promedio: {avg_turnaround_time:.2f}")
+    print(f"  * Tiempo de espera promedio: {avg_waiting_time:.2f}")
+    print(f"  * Rendimiento del sistema: {throughput:.2f} trabajos por unidad de tiempo")
