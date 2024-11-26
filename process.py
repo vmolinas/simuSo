@@ -1,5 +1,3 @@
-from memory_management import release_memory
-
 class Process:
     def __init__(self, process_id, size, arrival_time, burst_time):
         self.process_id = process_id
@@ -19,16 +17,12 @@ class Process:
                 f"Tamaño = {self.size}K, "
                 f"Arribo = {self.arrival_time}, "
                 f"Irrupción = {self.burst_time}")
-    
-def finalize_process(current_process, partitions, current_time):
-    current_process.finish_time = current_time + 1
-    current_process.turnaround_time = current_process.finish_time - current_process.arrival_time
-    current_process.waiting_time = current_process.turnaround_time - current_process.burst_time
-    current_process.finished = True
-    release_memory(partitions, current_process)
 
-    print(f"\t---Proceso {current_process.process_id}: "
-          f"  * Inicio={current_process.start_time}, Finalizado={current_process.finish_time}")
+def complete_process(current_process, current_time):  
+    current_process.finish_time = current_time  
+    current_process.turnaround_time = current_process.finish_time - current_process.arrival_time  
+    current_process.waiting_time = current_process.turnaround_time - current_process.burst_time  
+    current_process.finished = True  
 
 def execute_process(current_process, quantum_counter, quantum, cpu_queue, current_time):
     if current_process:
@@ -47,29 +41,3 @@ def execute_process(current_process, quantum_counter, quantum, cpu_queue, curren
             return current_process, 0, True
 
     return current_process, quantum_counter, False
-
-def calculate_statistics(processes):
-    total_turnaround_time = 0
-    total_waiting_time = 0
-    completed_processes = 0
-
-    for process in processes:
-        if process.finished:
-            completed_processes += 1
-            total_turnaround_time += process.turnaround_time
-            total_waiting_time += process.waiting_time
-
-    if completed_processes > 0:
-        avg_turnaround_time = total_turnaround_time / completed_processes
-        avg_waiting_time = total_waiting_time / completed_processes
-        total_time = max([p.finish_time for p in processes if p.finished], default=1)
-        throughput = completed_processes / total_time
-    else:
-        avg_turnaround_time = 0
-        avg_waiting_time = 0
-        throughput = 0
-
-    print("\n---INFORME ESTADISTICO---")
-    print(f"  * Tiempo de retorno promedio: {avg_turnaround_time:.2f}")
-    print(f"  * Tiempo de espera promedio: {avg_waiting_time:.2f}")
-    print(f"  * Rendimiento del sistema: {throughput:.2f} trabajos por unidad de tiempo")

@@ -36,4 +36,4 @@ Este proyecto implementa una **simulación de planificación de procesos y gesti
 
 2. Ejecuta la simulación con el comando:  
    ```bash
-   python cpu_planning.py <nombre_archivo>
+   python main.py <nombre_archivo>

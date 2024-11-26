@@ -1,14 +1,15 @@
 from utils import load_processes, clear_screen
-from process import calculate_statistics, execute_process, finalize_process
-from memory_management import worst_fit, initialize_partitions
-from visualization import display_memory_table, display_ready_queue, display_waiting_queue
+from process import execute_process, complete_process
+from memory_management import worst_fit, initialize_partitions, release_memory
+from visualization import display_memory_table, display_ready_queue, display_waiting_queue, display_statistics
 from collections import deque
+
+finished_processes = []
 
 def assign_to_waiting_processes(waiting_queue, ready_queue, partitions, current_time, max_ready_queue_size=5):
     for process in list(waiting_queue):
         # Verificar el límite de procesos en ready_queue
         if len(ready_queue) >= max_ready_queue_size:
-            # print(f"  * Límite alcanzado. Proceso {process.process_id} permanece en lista de espera.")
             break
 
         # Intentar asignar memoria
@@ -24,6 +25,31 @@ def assign_to_waiting_processes(waiting_queue, ready_queue, partitions, current_
                 print(
                     f"  * Proceso {process.process_id} ha sido asignado a la cola de listos.")
 
+def finalize_process(current_process, partitions, current_time):  
+    current_process.finish_time = current_time  # Asegúrate de que sea actual.  
+    current_process.turnaround_time = (current_process.finish_time - current_process.arrival_time)  
+    current_process.waiting_time = (current_process.turnaround_time - current_process.burst_time)  
+    complete_process(current_process, current_time) 
+    
+     # Almacena los datos del proceso actual en un diccionario  
+    stats = {  
+        'process_id': current_process.process_id,  
+        'arrival_time': current_process.arrival_time,
+        'waiting_time': current_process.waiting_time,  
+        'turnaround_time': current_process.turnaround_time,  
+        'finish_time': current_process.finish_time  
+    }  
+    
+    # Agrega el diccionario a la lista de estadísticas  
+    finished_processes.append(stats)
+    
+    current_process.finished = True  # Esto permite que los promedios se calculen correctamente.  
+    release_memory(partitions, current_process)
+
+    print(f"\n  * Proceso {current_process.process_id}: "  
+          f"Primera entrada al procesador={current_process.start_time}, Finalizado={current_process.finish_time}, "  
+          f"T. de Espera={current_process.waiting_time}, T. de Retorno={current_process.turnaround_time}")
+    
 def update_waiting_queue(waiting_queue, processes, current_time, max_waiting_size=5):
     for process in list(processes):
         if process.arrival_time <= current_time and len(waiting_queue) < max_waiting_size:
@@ -56,7 +82,9 @@ def simulate(file_name):
     quantum_counter = 0
     current_time = 0
 
-    print("\n\t---I N I C I O  D E  L A  S I M U L A C I O N---")
+    print("\n\t---INICIO  DE  LA  SIMULACION---")
+
+    assign_to_waiting_processes(waiting_queue, ready_queue, partitions, current_time)
 
     assign_to_waiting_processes(
         waiting_queue, ready_queue, partitions, current_time)
@@ -88,14 +116,12 @@ def simulate(file_name):
 
             # Si el quantum se agota, mover el proceso al final de la cola
             elif quantum_counter == quantum:
-                print(
-                    f"  * Proceso {current_process.process_id} ha agotado su tiempo en CPU.")
 
                 # Mover el proceso al final de la cola de listos
                 ready_queue.append(current_process)
 
                 # Liberar la CPU
-                # current_process = None
+                current_process = None
                 quantum_counter = 0
 
                 # Asignar el siguiente proceso de la cola de listos
@@ -121,8 +147,9 @@ def simulate(file_name):
         if waiting_queue:
             display_waiting_queue(waiting_queue)
         current_process = None
-        input("Presiona Enter para continuar...")
+        input("\n\t---Presiona Enter para continuar...")
         clear_screen()
+    display_memory_table(partitions)
 
-    print("\n\t---F I N  D E  L A  S I M U L A C I O N---")
-    calculate_statistics(processes)
+    print("\n\t---FIN  DE  LA SIMULACION---")
+    display_statistics(finished_processes)

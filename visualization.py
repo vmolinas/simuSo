@@ -50,3 +50,38 @@ def display_waiting_queue(waiting_queue):
               f"| {str(process.burst_time).ljust(18)} "
               f"| {str(process.remaining_time).ljust(17)} |")
     print("+--------------+----------+-----------------+--------------------+-------------------+")
+
+def display_statistics(estadisticas):
+    if not estadisticas:
+        print("No hay estadísticas para mostrar.")
+        return
+
+    print("\n  ESTADÍSTICAS DE PROCESOS:")
+    print("+--------------+------------------+-----------------+------------------+-----------------------+")
+    print("|  Proceso ID  |  Tiempo Llegada  |  Tiempo Espera  |  Tiempo Retorno  |  Tiempo Finalización  |")
+    print("+--------------+------------------+-----------------+------------------+-----------------------+")
+
+    # Inicializar variables para cálculo de promedios
+    total_waiting_time = 0
+    total_turnaround_time = 0
+
+    # Imprimir las filas de datos
+    for stat in estadisticas:
+        print(f"| {str(stat['process_id']).ljust(12)} "
+              f"| {str(stat['arrival_time']).ljust(16)} "
+              f"| {str(stat['waiting_time']).ljust(15)} "
+              f"| {str(stat['turnaround_time']).ljust(16)} "
+              f"| {str(stat['finish_time']).ljust(21)} |")
+        print("+--------------+------------------+-----------------+------------------+-----------------------+")
+
+        # Acumular tiempos para cálculo de promedios
+        total_waiting_time += stat['waiting_time']
+        total_turnaround_time += stat['turnaround_time']
+
+    # Calcular tiempos promedios
+    average_waiting_time = total_waiting_time / len(estadisticas)
+    average_turnaround_time = total_turnaround_time / len(estadisticas)
+
+    # Imprimir los promedios
+    print(f"\n  * Promedio de Tiempo de Espera: {average_waiting_time:.2f}")
+    print(f"  * Promedio de Tiempo de Retorno: {average_turnaround_time:.2f}")
